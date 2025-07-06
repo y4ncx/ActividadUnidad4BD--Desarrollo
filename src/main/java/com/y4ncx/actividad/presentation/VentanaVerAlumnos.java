@@ -1,54 +1,72 @@
 package com.y4ncx.actividad.presentation;
 
 import com.y4ncx.actividad.domain.Alumno;
-import com.y4ncx.actividad.infrastructure.ConexionDB;
 import com.y4ncx.actividad.infrastructure.AlumnoRepositoryImpl;
 import com.y4ncx.actividad.repository.AlumnoRepository;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.event.*;
-import java.sql.*;
+import java.awt.*;
 import java.util.List;
 
 public class VentanaVerAlumnos extends JFrame {
 
     private JTable tabla;
     private DefaultTableModel modelo;
-    private AlumnoRepository repo = new AlumnoRepositoryImpl();
+    private AlumnoRepository repo;
 
     public VentanaVerAlumnos() {
-        setTitle("Lista de Alumnos");
-        setSize(600, 300);
+        setTitle("Gestión de Alumnos");
+        setSize(700, 400);
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        String[] columnas = {"DNI", "Nombre completo", "Número de matrícula"};
+        repo = new AlumnoRepositoryImpl();
+
+        String[] columnas = {"DNI", "Nombre completo", "Matrícula"};
         modelo = new DefaultTableModel(columnas, 0);
         tabla = new JTable(modelo);
 
-        cargarAlumnos();
+        JScrollPane scroll = new JScrollPane(tabla);
+        add(scroll, BorderLayout.CENTER);
 
-        // Menú emergente
-        JPopupMenu menu = new JPopupMenu();
-        JMenuItem editarItem = new JMenuItem("Editar");
-        JMenuItem eliminarItem = new JMenuItem("Eliminar");
+        // Botones
+        JButton btnAgregar = new JButton("📋 Agregar");
+        JButton btnEditar = new JButton("✏️ Editar");
+        JButton btnEliminar = new JButton("🗑️ Eliminar");
 
-        menu.add(editarItem);
-        menu.add(eliminarItem);
+        btnAgregar.setBackground(new Color(0, 120, 255));
+        btnEditar.setBackground(new Color(0, 120, 255));
+        btnEliminar.setBackground(new Color(0, 120, 255));
+        btnAgregar.setForeground(Color.WHITE);
+        btnEditar.setForeground(Color.WHITE);
+        btnEliminar.setForeground(Color.WHITE);
 
-        tabla.setComponentPopupMenu(menu);
+        // Acción: Abrir ventana para agregar alumno
+        btnAgregar.addActionListener(e -> new VentanaAgregarAlumno(() -> cargarAlumnos()));
 
-        tabla.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                int row = tabla.rowAtPoint(e.getPoint());
-                tabla.setRowSelectionInterval(row, row);
+        // Acción: Editar alumno
+        btnEditar.addActionListener(e -> {
+            int fila = tabla.getSelectedRow();
+            if (fila == -1) {
+                JOptionPane.showMessageDialog(this, "Selecciona un alumno para editar.");
+                return;
             }
+            new VentanaEditarAlumno(tabla);
         });
 
-        editarItem.addActionListener(e -> editarAlumno());
-        eliminarItem.addActionListener(e -> eliminarAlumno());
+        // Acción: Eliminar alumno
+        btnEliminar.addActionListener(e -> eliminarAlumno());
 
-        add(new JScrollPane(tabla));
+        // Panel para botones
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        panelBotones.add(btnAgregar);
+        panelBotones.add(btnEditar);
+        panelBotones.add(btnEliminar);
+
+        add(panelBotones, BorderLayout.SOUTH);
+
+        cargarAlumnos();
         setVisible(true);
     }
 
@@ -62,34 +80,16 @@ public class VentanaVerAlumnos extends JFrame {
 
     private void eliminarAlumno() {
         int fila = tabla.getSelectedRow();
-        if (fila != -1) {
-            String dni = tabla.getValueAt(fila, 0).toString();
-            int confirm = JOptionPane.showConfirmDialog(this, "¿Eliminar alumno con DNI " + dni + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                repo.eliminar(dni);
-                cargarAlumnos();
-            }
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(this, "Selecciona un alumno para eliminar.");
+            return;
         }
-    }
 
-    private void editarAlumno() {
-        int fila = tabla.getSelectedRow();
-        if (fila != -1) {
-            String dniOriginal = tabla.getValueAt(fila, 0).toString();
-            String nombre = tabla.getValueAt(fila, 1).toString();
-            String matriculaStr = tabla.getValueAt(fila, 2).toString();
+        int confirm = JOptionPane.showConfirmDialog(this, "¿Estás seguro de eliminar este alumno?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
 
-            String nuevoNombre = JOptionPane.showInputDialog(this, "Editar nombre:", nombre);
-            String nuevaMatriculaStr = JOptionPane.showInputDialog(this, "Editar matrícula:", matriculaStr);
-
-            try {
-                int nuevaMatricula = Integer.parseInt(nuevaMatriculaStr);
-                Alumno actualizado = new Alumno(dniOriginal, nuevoNombre, nuevaMatricula);
-                repo.actualizar(actualizado);
-                cargarAlumnos();
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Matrícula inválida.");
-            }
-        }
+        int dni = Integer.parseInt(tabla.getValueAt(fila, 0).toString());
+        repo.eliminar(String.valueOf(dni));
+        cargarAlumnos();
     }
 }

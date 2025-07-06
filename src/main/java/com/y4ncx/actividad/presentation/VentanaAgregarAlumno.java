@@ -6,14 +6,15 @@ import com.y4ncx.actividad.repository.AlumnoRepository;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.function.Consumer;
 
 public class VentanaAgregarAlumno extends JFrame {
 
     public VentanaAgregarAlumno(Runnable callbackActualizarTabla) {
-        setTitle("Agregar Alumno");
-        setSize(350, 250);
+        setTitle("➕ Nuevo Alumno");
+        setSize(350, 230);
         setLocationRelativeTo(null);
+
+        AlumnoRepository repo = new AlumnoRepositoryImpl();
 
         JLabel lblDNI = new JLabel("DNI:");
         JTextField txtDNI = new JTextField(15);
@@ -21,12 +22,13 @@ public class VentanaAgregarAlumno extends JFrame {
         JLabel lblNombre = new JLabel("Nombre completo:");
         JTextField txtNombre = new JTextField(15);
 
-        JLabel lblMatricula = new JLabel("Número de matrícula:");
+        JLabel lblMatricula = new JLabel("Matrícula:");
         JTextField txtMatricula = new JTextField(10);
 
-        JButton btnGuardar = new JButton("Guardar");
-
-        AlumnoRepository repo = new AlumnoRepositoryImpl();
+        JButton btnGuardar = new JButton("💾 Guardar");
+        btnGuardar.setBackground(new Color(76, 175, 80));
+        btnGuardar.setForeground(Color.WHITE);
+        btnGuardar.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
         btnGuardar.addActionListener(e -> {
             try {
@@ -34,26 +36,18 @@ public class VentanaAgregarAlumno extends JFrame {
                 String nombre = txtNombre.getText();
                 int matricula = Integer.parseInt(txtMatricula.getText());
 
-                Alumno alumno = new Alumno(dni, nombre, matricula);
-
-                try {
-                    repo.guardar(new Alumno(dni, nombre, matricula));
-                    JOptionPane.showMessageDialog(this, "Alumno agregado correctamente");
-                    callbackActualizarTabla.run();
-                    dispose();
-                } catch (RuntimeException ex) {
-                    JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
-
-
-                callbackActualizarTabla.run();  // 🔁 Actualizar tabla
+                repo.guardar(new Alumno(dni, nombre, matricula));
+                JOptionPane.showMessageDialog(this, "Alumno guardado correctamente");
+                callbackActualizarTabla.run();
                 dispose();
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error al guardar: " + ex.getMessage());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Matrícula inválida");
+            } catch (RuntimeException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        setLayout(new GridLayout(4, 2, 5, 5));
+        setLayout(new GridLayout(4, 2, 8, 8));
         add(lblDNI); add(txtDNI);
         add(lblNombre); add(txtNombre);
         add(lblMatricula); add(txtMatricula);

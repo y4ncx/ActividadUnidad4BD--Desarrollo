@@ -16,39 +16,46 @@ public class VentanaPrincipal extends JFrame {
     private AlumnoRepository repo = new AlumnoRepositoryImpl();
 
     public VentanaPrincipal() {
-        setTitle("Gestión de Alumnos");
-        setSize(700, 400);
+        setTitle("🎓 Gestión de Alumnos");
+
+        // Ícono de la ventana
+        ImageIcon icon = new ImageIcon(getClass().getResource("/iconos/icon.jpg"));
+        setIconImage(icon.getImage());
+
+        setSize(700, 420);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(10, 10));
 
-        // ---------- Tabla ----------
-        String[] columnas = {"DNI", "Nombre completo", "Número de matrícula"};
-        modelo = new DefaultTableModel(columnas, 0);
+        // Tabla de alumnos
+        modelo = new DefaultTableModel(new String[]{"DNI", "Nombre completo", "Matrícula"}, 0);
         tabla = new JTable(modelo);
+        tabla.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tabla.setRowHeight(25);
         cargarAlumnos();
-        add(new JScrollPane(tabla), BorderLayout.CENTER);
 
-        // ---------- Botones ----------
-        JPanel panelBotones = new JPanel();
-        JButton btnAgregar = new JButton("Agregar Alumno");
-        JButton btnEditar = new JButton("Editar Alumno");
-        JButton btnEliminar = new JButton("Eliminar Alumno");
+        JScrollPane scrollPane = new JScrollPane(tabla);
+        add(scrollPane, BorderLayout.CENTER);
+
+        // Botones con estilo
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
+        JButton btnAgregar = crearBoton("† Agregar");
+        JButton btnEditar = crearBoton("† Editar");
+        JButton btnEliminar = crearBoton("† Eliminar");
 
         panelBotones.add(btnAgregar);
         panelBotones.add(btnEditar);
         panelBotones.add(btnEliminar);
-
         add(panelBotones, BorderLayout.SOUTH);
 
-        // ---------- Eventos ----------
+        // Acciones
         btnAgregar.addActionListener(e -> new VentanaAgregarAlumno(this::cargarAlumnos));
 
         btnEliminar.addActionListener(e -> {
             int fila = tabla.getSelectedRow();
             if (fila != -1) {
                 String dni = tabla.getValueAt(fila, 0).toString();
-                int confirm = JOptionPane.showConfirmDialog(this, "¿Eliminar alumno con DNI " + dni + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+                int confirm = JOptionPane.showConfirmDialog(this, "¿Eliminar a " + dni + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
                     repo.eliminar(dni);
                     cargarAlumnos();
@@ -63,18 +70,17 @@ public class VentanaPrincipal extends JFrame {
             if (fila != -1) {
                 String dni = tabla.getValueAt(fila, 0).toString();
                 String nombre = tabla.getValueAt(fila, 1).toString();
-                String matriculaStr = tabla.getValueAt(fila, 2).toString();
+                String matricula = tabla.getValueAt(fila, 2).toString();
 
-                String nuevoNombre = JOptionPane.showInputDialog(this, "Editar nombre:", nombre);
-                String nuevaMatriculaStr = JOptionPane.showInputDialog(this, "Editar matrícula:", matriculaStr);
+                String nuevoNombre = JOptionPane.showInputDialog(this, "Nuevo nombre:", nombre);
+                String nuevaMatricula = JOptionPane.showInputDialog(this, "Nueva matrícula:", matricula);
 
                 try {
-                    int nuevaMatricula = Integer.parseInt(nuevaMatriculaStr);
-                    Alumno actualizado = new Alumno(dni, nuevoNombre, nuevaMatricula);
-                    repo.actualizar(actualizado);
+                    int numMatricula = Integer.parseInt(nuevaMatricula);
+                    repo.actualizar(new Alumno(dni, nuevoNombre, numMatricula));
                     cargarAlumnos();
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Matrícula inválida.");
+                    JOptionPane.showMessageDialog(this, "Matrícula inválida");
                 }
             } else {
                 JOptionPane.showMessageDialog(this, "Selecciona un alumno para editar");
@@ -84,10 +90,20 @@ public class VentanaPrincipal extends JFrame {
         setVisible(true);
     }
 
+    private JButton crearBoton(String texto) {
+        JButton btn = new JButton(texto);
+        btn.setFocusPainted(false);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setBackground(new Color(33, 150, 243));
+        btn.setForeground(Color.WHITE);
+        btn.setPreferredSize(new Dimension(150, 40));
+        btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        return btn;
+    }
+
     private void cargarAlumnos() {
         modelo.setRowCount(0);
-        List<Alumno> alumnos = repo.listarTodos();
-        for (Alumno a : alumnos) {
+        for (Alumno a : repo.listarTodos()) {
             modelo.addRow(new Object[]{a.getDni(), a.getNombreCompleto(), a.getNumMatricula()});
         }
     }
