@@ -18,6 +18,6 @@ public class Main {
             e.printStackTrace();
         }
 
-        new VentanaPrincipal();
+        new VentanaMenuPrincipal();
     }
 }

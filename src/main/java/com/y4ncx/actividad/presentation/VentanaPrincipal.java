@@ -2,6 +2,8 @@ package com.y4ncx.actividad.presentation;
 
 import com.y4ncx.actividad.domain.Alumno;
 import com.y4ncx.actividad.infrastructure.AlumnoRepositoryImpl;
+import com.y4ncx.actividad.presentation.consultas.ConsultaAlumnosFrame;
+import com.y4ncx.actividad.presentation.consultas.ConsultaTFCFrame;
 import com.y4ncx.actividad.repository.AlumnoRepository;
 
 import javax.swing.*;
@@ -42,10 +44,21 @@ public class VentanaPrincipal extends JFrame {
         JButton btnAgregar = crearBoton("† Agregar");
         JButton btnEditar = crearBoton("† Editar");
         JButton btnEliminar = crearBoton("† Eliminar");
+        JButton btnConsultas = crearBoton("† Consultas Alumnos");
+        btnConsultas.addActionListener(e -> new ConsultaAlumnosFrame());
+        JButton btnConsultasTFC = crearBoton("📚 Consultas T.F.C.");
+
+
+        btnConsultasTFC.addActionListener(e -> new ConsultaTFCFrame());
+
+
+
 
         panelBotones.add(btnAgregar);
         panelBotones.add(btnEditar);
         panelBotones.add(btnEliminar);
+        panelBotones.add(btnConsultas);
+        panelBotones.add(btnConsultasTFC);
         add(panelBotones, BorderLayout.SOUTH);
 
         // Acciones
@@ -89,6 +102,9 @@ public class VentanaPrincipal extends JFrame {
 
         setVisible(true);
     }
+
+
+
 
     private JButton crearBoton(String texto) {
         JButton btn = new JButton(texto);
