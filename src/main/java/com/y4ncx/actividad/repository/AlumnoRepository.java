@@ -8,4 +8,15 @@ public interface AlumnoRepository {
     List<Alumno> listarTodos();
     void eliminar(String dni);
     void actualizar(Alumno alumno);
+
+    // Métodos personalizados agregados:
+    Alumno buscarPorMatricula(int matricula);
+    List<Alumno> alumnosSinTFC();
+    List<Alumno> alumnosConGrupoInvestigacion();
+    String grupoDeAlumno(int matricula);
+    List<Alumno> alumnosDefendieronEntre(String desde, String hasta);
+    List<String[]> alumnosConDirector();
+    List<Alumno> alumnosConColaboracion();
+    List<String[]> alumnosPorTribunal();
+    List<Alumno> alumnosSinTribunal();
 }

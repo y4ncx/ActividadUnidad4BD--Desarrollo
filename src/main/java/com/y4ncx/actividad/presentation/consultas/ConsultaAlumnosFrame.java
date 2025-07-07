@@ -6,6 +6,7 @@ import com.y4ncx.actividad.infrastructure.AlumnoRepositoryImpl;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.List;
 
 public class ConsultaAlumnosFrame extends JFrame {
 
@@ -166,4 +167,3 @@ public class ConsultaAlumnosFrame extends JFrame {
         setVisible(true);
     }
 }
-

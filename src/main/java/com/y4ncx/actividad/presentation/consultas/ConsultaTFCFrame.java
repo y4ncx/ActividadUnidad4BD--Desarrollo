@@ -54,6 +54,16 @@ public class ConsultaTFCFrame extends JFrame {
 
         add(panelBotones, BorderLayout.SOUTH);
 
+        // Botón Volver arriba
+        JButton btnVolver = new JButton("🔙 Volver");
+        btnVolver.setBackground(Color.GRAY);
+        btnVolver.setForeground(Color.WHITE);
+        btnVolver.addActionListener(e -> dispose());
+
+        JPanel panelVolver = new JPanel();
+        panelVolver.add(btnVolver);
+        add(panelVolver, BorderLayout.NORTH);
+
         // Acciones
         btnTodos.addActionListener(e -> mostrarLista(repo.listarTodos()));
         btnEnCurso.addActionListener(e -> mostrarLista(repo.listarEnCurso()));

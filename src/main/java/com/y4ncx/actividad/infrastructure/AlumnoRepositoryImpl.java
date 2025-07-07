@@ -9,7 +9,7 @@ import java.util.List;
 
 public class AlumnoRepositoryImpl implements AlumnoRepository {
 
-
+    // 1. Guardar un alumno
     @Override
     public void guardar(Alumno alumno) {
         try (Connection conn = ConexionDB.conectar()) {
@@ -20,7 +20,7 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
             stmt.setInt(3, alumno.getNumMatricula());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            if (e.getErrorCode() == 1062) { // Código MySQL para entrada duplicada
+            if (e.getErrorCode() == 1062) {
                 throw new RuntimeException("El DNI ya existe.");
             } else {
                 throw new RuntimeException("Error al guardar alumno: " + e.getMessage());
@@ -28,22 +28,16 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         }
     }
 
-
+    // 2. Listar todos los alumnos
     @Override
     public List<Alumno> listarTodos() {
         List<Alumno> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT * FROM alumnos";
+            String sql = "SELECT dni, nombre_completo, num_matricula FROM alumnos";
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
-
             while (rs.next()) {
-                Alumno alumno = new Alumno(
-                        rs.getString("dni"),
-                        rs.getString("nombre_completo"),
-                        rs.getInt("num_matricula")
-                );
-                lista.add(alumno);
+                lista.add(new Alumno(rs.getString("dni"), rs.getString("nombre_completo"), rs.getInt("num_matricula")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -51,6 +45,7 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return lista;
     }
 
+    // 3. Eliminar un alumno por DNI
     @Override
     public void eliminar(String dni) {
         try (Connection conn = ConexionDB.conectar()) {
@@ -63,6 +58,7 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         }
     }
 
+    // 4. Actualizar datos de un alumno
     @Override
     public void actualizar(Alumno alumno) {
         try (Connection conn = ConexionDB.conectar()) {
@@ -77,7 +73,8 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         }
     }
 
-    // 2. Mostrar los datos completos de un alumno específico mediante su número de matrícula
+    // 5. Buscar alumno por matrícula
+    @Override
     public Alumno buscarPorMatricula(int matricula) {
         try (Connection conn = ConexionDB.conectar()) {
             String sql = "SELECT * FROM alumnos WHERE num_matricula = ?";
@@ -93,7 +90,8 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return null;
     }
 
-    // 3. Obtener la lista de alumnos que aún no han defendido su T.F.C.
+    // 6. Alumnos que no han defendido TFC
+    @Override
     public List<Alumno> alumnosSinTFC() {
         List<Alumno> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
@@ -111,7 +109,8 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return lista;
     }
 
-    // 4. Listar los alumnos que han pertenecido a un grupo de investigación
+    // 7. Alumnos que tienen grupo de investigación
+    @Override
     public List<Alumno> alumnosConGrupoInvestigacion() {
         List<Alumno> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
@@ -127,7 +126,8 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return lista;
     }
 
-    // 5. Consultar el grupo de investigación al que pertenece un alumno específico
+    // 8. Nombre del grupo al que pertenece un alumno
+    @Override
     public String grupoDeAlumno(int matricula) {
         try (Connection conn = ConexionDB.conectar()) {
             String sql = "SELECT g.nombre FROM grupos_investigacion g " +
@@ -143,7 +143,8 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return "No asignado";
     }
 
-    // 6. Mostrar los alumnos que han defendido su T.F.C. en un periodo determinado
+    // 9. Alumnos que defendieron entre fechas
+    @Override
     public List<Alumno> alumnosDefendieronEntre(String desde, String hasta) {
         List<Alumno> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
@@ -163,7 +164,8 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return lista;
     }
 
-    // 7. Obtener la lista de alumnos junto con el profesor que dirigió su T.F.C.
+    // 10. Alumnos con su director
+    @Override
     public List<String[]> alumnosConDirector() {
         List<String[]> datos = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
@@ -181,7 +183,8 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return datos;
     }
 
-    // 8. Listar los alumnos que han recibido colaboración de profesores externos en su T.F.C.
+    // 11. Alumnos con colaboración externa
+    @Override
     public List<Alumno> alumnosConColaboracion() {
         List<Alumno> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
@@ -199,7 +202,8 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return lista;
     }
 
-    // 9. Consultar los alumnos asignados a cada tribunal para su defensa
+    // 12. Alumnos por tribunal
+    @Override
     public List<String[]> alumnosPorTribunal() {
         List<String[]> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
@@ -217,7 +221,8 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return lista;
     }
 
-    // 10. Listar los alumnos que aún no han sido asignados a un tribunal
+    // 13. Alumnos sin tribunal asignado
+    @Override
     public List<Alumno> alumnosSinTribunal() {
         List<Alumno> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
@@ -234,9 +239,4 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         }
         return lista;
     }
-
-
-
-
-
 }

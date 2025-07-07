@@ -10,6 +10,72 @@ import java.util.List;
 public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepository {
 
     @Override
+    public void agregar(TrabajosFinCarrera nuevo) {
+        try (Connection conn = ConexionDB.conectar()) {
+            String sql = "INSERT INTO tfc (num_orden, tema, fecha_inicio, num_matricula) VALUES (?, ?, ?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, nuevo.getNumOrden());
+            stmt.setString(2, nuevo.getTema());
+            stmt.setDate(3, java.sql.Date.valueOf(nuevo.getFechaInicio()));
+            stmt.setInt(4, Integer.parseInt(nuevo.getAlumnoRealiza()));
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Override
+    public void guardar(TrabajosFinCarrera tfc) {
+        try (Connection conn = ConexionDB.conectar()) {
+            String sql = "INSERT INTO trabajos_fin_carrera (num_orden, tema, fecha_inicio, alumno_realiza) VALUES (?, ?, ?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, tfc.getNumOrden());
+            stmt.setString(2, tfc.getTema());
+            stmt.setDate(3, java.sql.Date.valueOf(tfc.getFechaInicio()));
+            stmt.setString(4, tfc.getAlumnoRealiza());
+
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error al guardar el T.F.C.: " + e.getMessage());
+        }
+    }
+
+
+    @Override
+    public void actualizar(TrabajosFinCarrera tfc) {
+        try (Connection conn = ConexionDB.conectar()) {
+            String sql = "UPDATE trabajos_fin_carrera SET tema = ?, fecha_inicio = ?, alumno_realiza = ? WHERE num_orden = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, tfc.getTema());
+            stmt.setDate(2, java.sql.Date.valueOf(tfc.getFechaInicio()));
+            stmt.setString(3, tfc.getAlumnoRealiza());
+            stmt.setInt(4, tfc.getNumOrden());
+
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error al actualizar el T.F.C.: " + e.getMessage());
+        }
+    }
+
+
+    @Override
+    public void eliminar(int numOrden) {
+        try (Connection conn = ConexionDB.conectar()) {
+            String sql = "DELETE FROM trabajos_fin_carrera WHERE num_orden = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, numOrden);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error al eliminar el T.F.C.: " + e.getMessage());
+        }
+    }
+
+
+    @Override
     public List<TrabajosFinCarrera> listarTodos() {
         List<TrabajosFinCarrera> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {

@@ -4,6 +4,12 @@ import com.y4ncx.actividad.domain.TrabajosFinCarrera;
 import java.util.List;
 
 public interface TrabajosFinCarreraRepository {
+
+
+    void agregar(TrabajosFinCarrera nuevo);
+    void actualizar(TrabajosFinCarrera tfc);
+    void eliminar(int numOrden);
+    void guardar(TrabajosFinCarrera tfc);
     List<TrabajosFinCarrera> listarTodos();
     List<TrabajosFinCarrera> listarEnCurso();
     TrabajosFinCarrera obtenerPorAlumno(String dniAlumno);
@@ -14,4 +20,6 @@ public interface TrabajosFinCarreraRepository {
     int cantidadPorTribunal(String tribunalID);
     TrabajosFinCarrera defensaMasReciente();
     List<TrabajosFinCarrera> defendidosPorTribunalYFecha(String tribunalID, String fecha);
+
+
 }

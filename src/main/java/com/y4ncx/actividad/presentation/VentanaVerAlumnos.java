@@ -2,6 +2,7 @@ package com.y4ncx.actividad.presentation;
 
 import com.y4ncx.actividad.domain.Alumno;
 import com.y4ncx.actividad.infrastructure.AlumnoRepositoryImpl;
+import com.y4ncx.actividad.presentation.consultas.ConsultaAlumnosFrame;
 import com.y4ncx.actividad.repository.AlumnoRepository;
 
 import javax.swing.*;
@@ -34,18 +35,19 @@ public class VentanaVerAlumnos extends JFrame {
         JButton btnAgregar = new JButton("📋 Agregar");
         JButton btnEditar = new JButton("✏️ Editar");
         JButton btnEliminar = new JButton("🗑️ Eliminar");
+        JButton btnConsultas = new JButton("🔍 Ver Consultas");
 
         btnAgregar.setBackground(new Color(0, 120, 255));
         btnEditar.setBackground(new Color(0, 120, 255));
         btnEliminar.setBackground(new Color(0, 120, 255));
+        btnConsultas.setBackground(new Color(100, 100, 255));
+
         btnAgregar.setForeground(Color.WHITE);
         btnEditar.setForeground(Color.WHITE);
         btnEliminar.setForeground(Color.WHITE);
+        btnConsultas.setForeground(Color.WHITE);
 
-        // Acción: Abrir ventana para agregar alumno
         btnAgregar.addActionListener(e -> new VentanaAgregarAlumno(() -> cargarAlumnos()));
-
-        // Acción: Editar alumno
         btnEditar.addActionListener(e -> {
             int fila = tabla.getSelectedRow();
             if (fila == -1) {
@@ -54,15 +56,14 @@ public class VentanaVerAlumnos extends JFrame {
             }
             new VentanaEditarAlumno(tabla);
         });
-
-        // Acción: Eliminar alumno
         btnEliminar.addActionListener(e -> eliminarAlumno());
+        btnConsultas.addActionListener(e -> new ConsultaAlumnosFrame());
 
-        // Panel para botones
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         panelBotones.add(btnAgregar);
         panelBotones.add(btnEditar);
         panelBotones.add(btnEliminar);
+        panelBotones.add(btnConsultas);
 
         add(panelBotones, BorderLayout.SOUTH);
 
@@ -88,8 +89,8 @@ public class VentanaVerAlumnos extends JFrame {
         int confirm = JOptionPane.showConfirmDialog(this, "¿Estás seguro de eliminar este alumno?", "Confirmar", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
 
-        int dni = Integer.parseInt(tabla.getValueAt(fila, 0).toString());
-        repo.eliminar(String.valueOf(dni));
+        String dni = tabla.getValueAt(fila, 0).toString();
+        repo.eliminar(dni);
         cargarAlumnos();
     }
 }
