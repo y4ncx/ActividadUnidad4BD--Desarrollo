@@ -1,6 +1,7 @@
 package com.y4ncx.actividad.domain;
 
 public class Tribunal {
+
     private int numTribunal;
     private String lugarExamen;
     private int cantidadProfesores;
@@ -41,7 +42,7 @@ public class Tribunal {
         this.cantidadProfesores = cantidadProfesores;
     }
 
-    public String isAlumnoPresente() {
+    public String getAlumnoPresente() {
         return alumnoPresente;
     }
 
@@ -49,7 +50,7 @@ public class Tribunal {
         this.alumnoPresente = alumnoPresente;
     }
 
-    public String isTfcDefendido() {
+    public String getTfcDefendido() {
         return tfcDefendido;
     }
 
@@ -71,10 +72,9 @@ public class Tribunal {
                 "numTribunal=" + numTribunal +
                 ", lugarExamen='" + lugarExamen + '\'' +
                 ", cantidadProfesores=" + cantidadProfesores +
-                ", alumnoPresente=" + alumnoPresente +
-                ", tfcDefendido=" + tfcDefendido +
+                ", alumnoPresente='" + alumnoPresente + '\'' +
+                ", tfcDefendido='" + tfcDefendido + '\'' +
                 ", fechaDefensa='" + fechaDefensa + '\'' +
                 '}';
     }
 }
-

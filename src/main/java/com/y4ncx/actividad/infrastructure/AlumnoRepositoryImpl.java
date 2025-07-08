@@ -9,7 +9,25 @@ import java.util.List;
 
 public class AlumnoRepositoryImpl implements AlumnoRepository {
 
-    // 1. Guardar un alumno
+    @Override
+    public String grupoDeAlumno(String dni) {
+        try (Connection conn = ConexionDB.conectar()) {
+            String sql = "SELECT g.nombre_grupo FROM grupos g " +
+                    "JOIN alumno_grupo ag ON g.num_grupo = ag.grupo_numero " +
+                    "JOIN alumnos a ON ag.alumno_dni = a.dni " +
+                    "WHERE a.dni = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, dni);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) return rs.getString("nombre_grupo");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "No asignado";
+    }
+
+
+
     @Override
     public void guardar(Alumno alumno) {
         try (Connection conn = ConexionDB.conectar()) {
@@ -28,16 +46,17 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         }
     }
 
-    // 2. Listar todos los alumnos
     @Override
     public List<Alumno> listarTodos() {
         List<Alumno> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT dni, nombre_completo, num_matricula FROM alumnos";
+            String sql = "SELECT * FROM alumnos";
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
-                lista.add(new Alumno(rs.getString("dni"), rs.getString("nombre_completo"), rs.getInt("num_matricula")));
+                lista.add(new Alumno(rs.getString("dni"),
+                        rs.getString("nombre_completo"),
+                        rs.getInt("num_matricula")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -45,7 +64,6 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return lista;
     }
 
-    // 3. Eliminar un alumno por DNI
     @Override
     public void eliminar(String dni) {
         try (Connection conn = ConexionDB.conectar()) {
@@ -58,7 +76,6 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         }
     }
 
-    // 4. Actualizar datos de un alumno
     @Override
     public void actualizar(Alumno alumno) {
         try (Connection conn = ConexionDB.conectar()) {
@@ -73,7 +90,6 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         }
     }
 
-    // 5. Buscar alumno por matrícula
     @Override
     public Alumno buscarPorMatricula(int matricula) {
         try (Connection conn = ConexionDB.conectar()) {
@@ -82,7 +98,9 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
             stmt.setInt(1, matricula);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return new Alumno(rs.getString("dni"), rs.getString("nombre_completo"), rs.getInt("num_matricula"));
+                return new Alumno(rs.getString("dni"),
+                        rs.getString("nombre_completo"),
+                        rs.getInt("num_matricula"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -90,18 +108,17 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return null;
     }
 
-    // 6. Alumnos que no han defendido TFC
     @Override
     public List<Alumno> alumnosSinTFC() {
         List<Alumno> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT a.* FROM alumnos a " +
-                    "LEFT JOIN tfc t ON a.num_matricula = t.num_matricula " +
-                    "WHERE t.defendido = false OR t.defendido IS NULL";
+            String sql = "SELECT * FROM alumnos WHERE num_matricula NOT IN (SELECT alumno_realiza FROM trabajo_fin_carrera)";
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                lista.add(new Alumno(rs.getString("dni"), rs.getString("nombre_completo"), rs.getInt("num_matricula")));
+                lista.add(new Alumno(rs.getString("dni"),
+                        rs.getString("nombre_completo"),
+                        rs.getInt("num_matricula")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -109,16 +126,40 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return lista;
     }
 
-    // 7. Alumnos que tienen grupo de investigación
+    @Override
+    public List<String[]> alumnosConGrupoYFecha() {
+        List<String[]> lista = new ArrayList<>();
+        try (Connection conn = ConexionDB.conectar()) {
+            String sql = "SELECT a.nombre_completo AS alumno, g.nombre_grupo AS grupo, g.fecha_incorporacion " +
+                    "FROM alumnos a " +
+                    "JOIN grupos g ON a.dni = g.num_componentes";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                lista.add(new String[]{
+                        rs.getString("alumno"),
+                        rs.getString("grupo"),
+                        rs.getString("fecha_incorporacion")
+                });
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
+
+
     @Override
     public List<Alumno> alumnosConGrupoInvestigacion() {
         List<Alumno> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT a.* FROM alumnos a JOIN alumnos_grupos ag ON a.num_matricula = ag.num_matricula";
+            String sql = "SELECT * FROM alumnos WHERE num_matricula IN (SELECT num_componentes FROM grupos)";
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                lista.add(new Alumno(rs.getString("dni"), rs.getString("nombre_completo"), rs.getInt("num_matricula")));
+                lista.add(new Alumno(rs.getString("dni"),
+                        rs.getString("nombre_completo"),
+                        rs.getInt("num_matricula")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -126,37 +167,26 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return lista;
     }
 
-    // 8. Nombre del grupo al que pertenece un alumno
-    @Override
-    public String grupoDeAlumno(int matricula) {
-        try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT g.nombre FROM grupos_investigacion g " +
-                    "JOIN alumnos_grupos ag ON g.id = ag.id_grupo " +
-                    "WHERE ag.num_matricula = ?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, matricula);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) return rs.getString("nombre");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return "No asignado";
-    }
 
-    // 9. Alumnos que defendieron entre fechas
+
+
+
     @Override
     public List<Alumno> alumnosDefendieronEntre(String desde, String hasta) {
         List<Alumno> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
             String sql = "SELECT a.* FROM alumnos a " +
-                    "JOIN tfc t ON a.num_matricula = t.num_matricula " +
-                    "WHERE t.defendido = true AND t.fecha_defensa BETWEEN ? AND ?";
+                    "JOIN trabajo_fin_carrera t ON a.num_matricula = t.alumno_realiza " +
+                    "JOIN tribunales tr ON t.num_orden = tr.tfc_defendido " +
+                    "WHERE tr.fecha_defensa BETWEEN ? AND ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, desde);
             stmt.setString(2, hasta);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                lista.add(new Alumno(rs.getString("dni"), rs.getString("nombre_completo"), rs.getInt("num_matricula")));
+                lista.add(new Alumno(rs.getString("dni"),
+                        rs.getString("nombre_completo"),
+                        rs.getInt("num_matricula")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -164,37 +194,93 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return lista;
     }
 
-    // 10. Alumnos con su director
     @Override
     public List<String[]> alumnosConDirector() {
-        List<String[]> datos = new ArrayList<>();
+        List<String[]> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
             String sql = "SELECT a.nombre_completo AS alumno, p.nombre_completo AS profesor " +
-                    "FROM alumnos a JOIN tfc t ON a.num_matricula = t.num_matricula " +
-                    "JOIN profesores p ON t.dni_profesor = p.dni";
+                    "FROM alumnos a " +
+                    "JOIN trabajo_fin_carrera tfc ON a.dni = tfc.alumno_realiza " +
+                    "JOIN profesores p ON tfc.profesor_dirige = p.dni";
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                datos.add(new String[]{rs.getString("alumno"), rs.getString("profesor")});
+                lista.add(new String[]{
+                        rs.getString("alumno"),
+                        rs.getString("profesor")
+                });
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return datos;
+        return lista;
     }
 
-    // 11. Alumnos con colaboración externa
+    @Override
+    public List<String[]> alumnosConColaboracionExterna() {
+        List<String[]> lista = new ArrayList<>();
+        try (Connection conn = ConexionDB.conectar()) {
+            String sql = "SELECT DISTINCT a.nombre_completo AS alumno, p.nombre_completo AS profesor_colaborador " +
+                    "FROM alumnos a " +
+                    "JOIN trabajo_fin_carrera t ON a.dni = t.alumno_realiza " +
+                    "JOIN colaboraciones c ON c.id_tfc = t.num_orden " +
+                    "JOIN profesores p ON p.dni = c.dni_profesor " +
+                    "WHERE c.dni_profesor <> t.profesor_dirige";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                lista.add(new String[]{
+                        rs.getString("alumno"),
+                        rs.getString("profesor_colaborador")
+                });
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
+
+    @Override
+    public List<Alumno> alumnosDefendieronEntreFechas(String desde, String hasta) {
+        List<Alumno> lista = new ArrayList<>();
+        try (Connection conn = ConexionDB.conectar()) {
+            String sql = "SELECT a.* FROM alumnos a " +
+                    "JOIN trabajo_fin_carrera t ON a.dni = t.alumno_realiza " +
+                    "JOIN tribunales tr ON t.num_orden = tr.tfc_defendido " +
+                    "WHERE tr.fecha_defensa BETWEEN ? AND ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, desde);
+            stmt.setString(2, hasta);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                lista.add(new Alumno(
+                        rs.getString("dni"),
+                        rs.getString("nombre_completo"),
+                        rs.getInt("num_matricula")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
+
+
+
+
     @Override
     public List<Alumno> alumnosConColaboracion() {
         List<Alumno> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
             String sql = "SELECT DISTINCT a.* FROM alumnos a " +
-                    "JOIN tfc t ON a.num_matricula = t.num_matricula " +
-                    "JOIN colaboraciones c ON t.id = c.id_tfc";
+                    "JOIN trabajo_fin_carrera t ON a.num_matricula = t.alumno_realiza " +
+                    "JOIN colaboraciones c ON c.id_tfc = t.num_orden";
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                lista.add(new Alumno(rs.getString("dni"), rs.getString("nombre_completo"), rs.getInt("num_matricula")));
+                lista.add(new Alumno(rs.getString("dni"),
+                        rs.getString("nombre_completo"),
+                        rs.getInt("num_matricula")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -202,18 +288,22 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return lista;
     }
 
-    // 12. Alumnos por tribunal
     @Override
     public List<String[]> alumnosPorTribunal() {
         List<String[]> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT a.nombre_completo, t.id AS tribunal " +
-                    "FROM alumnos a JOIN tfc tf ON a.num_matricula = tf.num_matricula " +
-                    "JOIN tribunales t ON tf.id_tribunal = t.id";
+            String sql = "SELECT a.nombre_completo AS alumno, t.num_tribunal, t.fecha_defensa " +
+                    "FROM alumnos a " +
+                    "JOIN trabajo_fin_carrera tfc ON a.dni = tfc.alumno_realiza " +
+                    "JOIN tribunales t ON tfc.num_orden = t.tfc_defendido";
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                lista.add(new String[]{rs.getString("nombre_completo"), rs.getString("tribunal")});
+                lista.add(new String[]{
+                        rs.getString("alumno"),
+                        rs.getString("num_tribunal"),
+                        rs.getString("fecha_defensa")
+                });
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -221,18 +311,21 @@ public class AlumnoRepositoryImpl implements AlumnoRepository {
         return lista;
     }
 
-    // 13. Alumnos sin tribunal asignado
+
     @Override
     public List<Alumno> alumnosSinTribunal() {
         List<Alumno> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
             String sql = "SELECT a.* FROM alumnos a " +
-                    "JOIN tfc t ON a.num_matricula = t.num_matricula " +
-                    "WHERE t.id_tribunal IS NULL";
+                    "JOIN trabajo_fin_carrera tfc ON a.num_matricula = tfc.alumno_realiza " +
+                    "LEFT JOIN tribunales t ON tfc.num_orden = t.tfc_defendido " +
+                    "WHERE t.num_tribunal IS NULL";
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                lista.add(new Alumno(rs.getString("dni"), rs.getString("nombre_completo"), rs.getInt("num_matricula")));
+                lista.add(new Alumno(rs.getString("dni"),
+                        rs.getString("nombre_completo"),
+                        rs.getInt("num_matricula")));
             }
         } catch (SQLException e) {
             e.printStackTrace();

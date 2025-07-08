@@ -1,7 +1,6 @@
 package com.y4ncx.actividad.presentation;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.y4ncx.actividad.presentation.VentanaPrincipal;
 
 import javax.swing.*;
 

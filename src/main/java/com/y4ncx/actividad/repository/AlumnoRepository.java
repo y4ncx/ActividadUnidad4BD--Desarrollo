@@ -13,7 +13,11 @@ public interface AlumnoRepository {
     Alumno buscarPorMatricula(int matricula);
     List<Alumno> alumnosSinTFC();
     List<Alumno> alumnosConGrupoInvestigacion();
-    String grupoDeAlumno(int matricula);
+    String grupoDeAlumno(String dni);
+
+    List<Alumno> alumnosDefendieronEntreFechas(String desde, String hasta);
+    List<String[]> alumnosConColaboracionExterna();
+    List<String[]> alumnosConGrupoYFecha();
     List<Alumno> alumnosDefendieronEntre(String desde, String hasta);
     List<String[]> alumnosConDirector();
     List<Alumno> alumnosConColaboracion();

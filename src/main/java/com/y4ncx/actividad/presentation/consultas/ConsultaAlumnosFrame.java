@@ -93,20 +93,22 @@ public class ConsultaAlumnosFrame extends JFrame {
         });
 
         btn4.addActionListener(e -> {
-            modelo.setColumnIdentifiers(new String[]{"DNI", "Nombre", "Matrícula"});
+            modelo.setColumnIdentifiers(new String[]{"Alumno", "Grupo", "Fecha de Incorporación"});
             modelo.setRowCount(0);
-            for (Alumno a : repo.alumnosConGrupoInvestigacion()) {
-                modelo.addRow(new Object[]{a.getDni(), a.getNombreCompleto(), a.getNumMatricula()});
+            List<String[]> lista = repo.alumnosConGrupoYFecha();
+            for (String[] fila : lista) {
+                modelo.addRow(fila);
             }
         });
 
+
         btn5.addActionListener(e -> {
-            String input = JOptionPane.showInputDialog(this, "Número de matrícula:");
+            String input = JOptionPane.showInputDialog(this, "Número de dni:");
             if (input != null) {
                 try {
                     int mat = Integer.parseInt(input);
-                    String grupo = repo.grupoDeAlumno(mat);
-                    modelo.setColumnIdentifiers(new String[]{"Matrícula", "Grupo"});
+                    String grupo = repo.grupoDeAlumno(String.valueOf(mat));
+                    modelo.setColumnIdentifiers(new String[]{"Dni", "Grupo"});
                     modelo.setRowCount(0);
                     modelo.addRow(new Object[]{mat, grupo});
                 } catch (NumberFormatException ex) {
@@ -116,18 +118,17 @@ public class ConsultaAlumnosFrame extends JFrame {
         });
 
         btn6.addActionListener(e -> {
-            JTextField desde = new JTextField();
-            JTextField hasta = new JTextField();
-            Object[] inputs = {
-                    "Desde (YYYY-MM-DD):", desde,
-                    "Hasta (YYYY-MM-DD):", hasta
-            };
-            int result = JOptionPane.showConfirmDialog(this, inputs, "Rango de fechas", JOptionPane.OK_CANCEL_OPTION);
-            if (result == JOptionPane.OK_OPTION) {
+            String desde = JOptionPane.showInputDialog(this, "Fecha desde (YYYY-MM-DD):");
+            String hasta = JOptionPane.showInputDialog(this, "Fecha hasta (YYYY-MM-DD):");
+
+            if (desde != null && hasta != null && !desde.isEmpty() && !hasta.isEmpty()) {
                 modelo.setColumnIdentifiers(new String[]{"DNI", "Nombre", "Matrícula"});
                 modelo.setRowCount(0);
-                for (Alumno a : repo.alumnosDefendieronEntre(desde.getText(), hasta.getText())) {
-                    modelo.addRow(new Object[]{a.getDni(), a.getNombreCompleto(), a.getNumMatricula()});
+                List<Alumno> lista = repo.alumnosDefendieronEntreFechas(desde, hasta);
+                for (Alumno a : lista) {
+                    modelo.addRow(new Object[]{
+                            a.getDni(), a.getNombreCompleto(), a.getNumMatricula()
+                    });
                 }
             }
         });
@@ -141,10 +142,11 @@ public class ConsultaAlumnosFrame extends JFrame {
         });
 
         btn8.addActionListener(e -> {
-            modelo.setColumnIdentifiers(new String[]{"DNI", "Nombre", "Matrícula"});
+            modelo.setColumnIdentifiers(new String[]{"Alumno", "Profesor colaborador"});
             modelo.setRowCount(0);
-            for (Alumno a : repo.alumnosConColaboracion()) {
-                modelo.addRow(new Object[]{a.getDni(), a.getNombreCompleto(), a.getNumMatricula()});
+            List<String[]> lista = repo.alumnosConColaboracionExterna();
+            for (String[] fila : lista) {
+                modelo.addRow(fila);
             }
         });
 

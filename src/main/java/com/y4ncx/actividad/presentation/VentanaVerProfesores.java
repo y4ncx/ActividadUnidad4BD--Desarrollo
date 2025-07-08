@@ -2,6 +2,8 @@ package com.y4ncx.actividad.presentation;
 
 import com.y4ncx.actividad.domain.Profesor;
 import com.y4ncx.actividad.infrastructure.ProfesorRepositoryImpl;
+import com.y4ncx.actividad.repository.ProfesorRepository;
+import com.y4ncx.actividad.presentation.consultas.ConsultaProfesoresFrame;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -9,116 +11,65 @@ import java.awt.*;
 import java.util.List;
 
 public class VentanaVerProfesores extends JFrame {
-
-    private DefaultTableModel modelo;
     private JTable tabla;
-    private ProfesorRepositoryImpl repo;
+    private DefaultTableModel modelo;
+    private ProfesorRepository repo = new ProfesorRepositoryImpl();
 
     public VentanaVerProfesores() {
         setTitle("👨‍🏫 Gestión de Profesores");
-        setSize(800, 500);
+        setSize(750, 450);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setLayout(new BorderLayout(10, 10));
 
-        repo = new ProfesorRepositoryImpl();
-        modelo = new DefaultTableModel();
+        modelo = new DefaultTableModel(new String[]{"DNI", "Nombre", "Dirección"}, 0);
         tabla = new JTable(modelo);
-        JScrollPane scrollPane = new JScrollPane(tabla);
+        JScrollPane scroll = new JScrollPane(tabla);
+        add(scroll, BorderLayout.CENTER);
 
-        add(scrollPane, BorderLayout.CENTER);
+        JButton btnAgregar = crearBoton(" Agregar");
+        JButton btnEditar = crearBoton("️ Editar");
+        JButton btnEliminar = crearBoton("️ Eliminar");
+        JButton btnConsultas = crearBoton(" Consultas");
 
-        JPanel panelBotones = new JPanel(new FlowLayout());
-
-        JButton btnAgregar = new JButton("➕ Agregar");
-        JButton btnEditar = new JButton("✏️ Editar");
-        JButton btnEliminar = new JButton("🗑️ Eliminar");
-        JButton btnConsultas = new JButton("🔍 Consultas");
-
-        panelBotones.add(btnAgregar);
-        panelBotones.add(btnEditar);
-        panelBotones.add(btnEliminar);
-        panelBotones.add(btnConsultas);
-
-        add(panelBotones, BorderLayout.SOUTH);
-
-        // Mostrar tabla al inicio
-        actualizarTabla();
-
-
-        // BOTÓN CONSULTAS (más adelante se abre ventana emergente con varias)
-        btnConsultas.addActionListener(e -> JOptionPane.showMessageDialog(this, "🔧 Consultas próximamente"));
-
-        // BOTÓN AGREGAR
-        btnAgregar.addActionListener(e -> {
-            JTextField dni = new JTextField();
-            JTextField nombre = new JTextField();
-            JTextField domicilio = new JTextField();
-            Object[] inputs = {
-                    "DNI:", dni,
-                    "Nombre completo:", nombre,
-                    "Domicilio:", domicilio
-            };
-            int result = JOptionPane.showConfirmDialog(this, inputs, "Agregar Profesor", JOptionPane.OK_CANCEL_OPTION);
-            if (result == JOptionPane.OK_OPTION) {
-                Profesor nuevo = new Profesor(dni.getText(), nombre.getText(), domicilio.getText());
-                // Aquí puedes implementar el método repo.insertarProfesor(nuevo);
-                JOptionPane.showMessageDialog(this, "✅ Profesor agregado (simulado)");
-                actualizarTabla();
-            }
-        });
-
-        // BOTÓN EDITAR
+        btnAgregar.addActionListener(e -> new VentanaAgregarProfesor(this::cargar));
         btnEditar.addActionListener(e -> {
             int fila = tabla.getSelectedRow();
             if (fila == -1) {
-                JOptionPane.showMessageDialog(this, "Seleccione un profesor");
+                JOptionPane.showMessageDialog(this, "Selecciona un profesor para editar.");
                 return;
             }
-
-            String dniOriginal = (String) modelo.getValueAt(fila, 0);
-
-            JTextField nombre = new JTextField((String) modelo.getValueAt(fila, 1));
-            JTextField domicilio = new JTextField((String) modelo.getValueAt(fila, 2));
-
-            Object[] inputs = {
-                    "Nombre completo:", nombre,
-                    "Domicilio:", domicilio
-            };
-            int result = JOptionPane.showConfirmDialog(this, inputs, "Editar Profesor", JOptionPane.OK_CANCEL_OPTION);
-            if (result == JOptionPane.OK_OPTION) {
-                // Aquí podrías actualizar con repo.actualizarProfesor(...);
-                JOptionPane.showMessageDialog(this, "✅ Profesor editado (simulado)");
-                actualizarTabla();
-            }
+            new VentanaEditarProfesor(tabla, this::cargar);
         });
-
-        // BOTÓN ELIMINAR
         btnEliminar.addActionListener(e -> {
             int fila = tabla.getSelectedRow();
-            if (fila == -1) {
-                JOptionPane.showMessageDialog(this, "Seleccione un profesor");
-                return;
-            }
-
-            String dni = (String) modelo.getValueAt(fila, 0);
-            int confirm = JOptionPane.showConfirmDialog(this, "¿Eliminar al profesor con DNI " + dni + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                // Aquí podrías usar repo.eliminarProfesor(dni);
-                JOptionPane.showMessageDialog(this, "✅ Profesor eliminado (simulado)");
-                actualizarTabla();
-            }
+            if (fila == -1) return;
+            String dni = tabla.getValueAt(fila, 0).toString();
+            repo.eliminar(dni);
+            cargar();
         });
+        btnConsultas.addActionListener(e -> new ConsultaProfesoresFrame());
 
+        JPanel panel = new JPanel(new FlowLayout());
+        panel.add(btnAgregar); panel.add(btnEditar); panel.add(btnEliminar); panel.add(btnConsultas);
+        add(panel, BorderLayout.SOUTH);
+
+        cargar();
         setVisible(true);
     }
 
-    private void actualizarTabla() {
-        modelo.setColumnIdentifiers(new String[]{"DNI", "Nombre", "Domicilio"});
+    private void cargar() {
         modelo.setRowCount(0);
-        List<Profesor> lista = repo.listarTodos();
-        for (Profesor p : lista) {
+        for (Profesor p : repo.listarTodos()) {
             modelo.addRow(new Object[]{p.getDni(), p.getNombreCompleto(), p.getDomicilio()});
         }
+    }
+
+    private JButton crearBoton(String texto) {
+        JButton btn = new JButton(texto);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(new Color(0, 120, 255));
+        btn.setFocusPainted(false);
+        return btn;
     }
 }

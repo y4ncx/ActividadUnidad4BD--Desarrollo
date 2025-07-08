@@ -31,23 +31,17 @@ public class VentanaVerAlumnos extends JFrame {
         JScrollPane scroll = new JScrollPane(tabla);
         add(scroll, BorderLayout.CENTER);
 
-        // Botones
-        JButton btnAgregar = new JButton("📋 Agregar");
-        JButton btnEditar = new JButton("✏️ Editar");
-        JButton btnEliminar = new JButton("🗑️ Eliminar");
-        JButton btnConsultas = new JButton("🔍 Ver Consultas");
 
-        btnAgregar.setBackground(new Color(0, 120, 255));
-        btnEditar.setBackground(new Color(0, 120, 255));
-        btnEliminar.setBackground(new Color(0, 120, 255));
+
+        // Botones estilizados
+        JButton btnAgregar = crearBoton(" Agregar");
+        JButton btnEditar = crearBoton("️ Editar");
+        JButton btnEliminar = crearBoton("️ Eliminar");
+        JButton btnConsultas = crearBoton(" Ver Consultas");
+
         btnConsultas.setBackground(new Color(100, 100, 255));
 
-        btnAgregar.setForeground(Color.WHITE);
-        btnEditar.setForeground(Color.WHITE);
-        btnEliminar.setForeground(Color.WHITE);
-        btnConsultas.setForeground(Color.WHITE);
-
-        btnAgregar.addActionListener(e -> new VentanaAgregarAlumno(() -> cargarAlumnos()));
+        btnAgregar.addActionListener(e -> new VentanaAgregarAlumno(this::cargarAlumnos));
         btnEditar.addActionListener(e -> {
             int fila = tabla.getSelectedRow();
             if (fila == -1) {
@@ -71,6 +65,8 @@ public class VentanaVerAlumnos extends JFrame {
         setVisible(true);
     }
 
+
+
     private void cargarAlumnos() {
         modelo.setRowCount(0);
         List<Alumno> alumnos = repo.listarTodos();
@@ -92,5 +88,14 @@ public class VentanaVerAlumnos extends JFrame {
         String dni = tabla.getValueAt(fila, 0).toString();
         repo.eliminar(dni);
         cargarAlumnos();
+    }
+
+    private JButton crearBoton(String texto) {
+        JButton btn = new JButton(texto);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(new Color(0, 120, 255));
+        btn.setFocusPainted(false);
+        return btn;
     }
 }

@@ -12,12 +12,13 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
     @Override
     public void agregar(TrabajosFinCarrera nuevo) {
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "INSERT INTO tfc (num_orden, tema, fecha_inicio, num_matricula) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO trabajo_fin_carrera (num_orden, tema, fecha_inicio, alumno_realiza, profesor_dirige) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, nuevo.getNumOrden());
             stmt.setString(2, nuevo.getTema());
             stmt.setDate(3, java.sql.Date.valueOf(nuevo.getFechaInicio()));
-            stmt.setInt(4, Integer.parseInt(nuevo.getAlumnoRealiza()));
+            stmt.setInt(4, nuevo.getAlumnoRealiza());
+            stmt.setInt(5, nuevo.getProfesorDirige());
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -25,53 +26,15 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
     }
 
 
-    @Override
-    public void guardar(TrabajosFinCarrera tfc) {
-        try (Connection conn = ConexionDB.conectar()) {
-            String sql = "INSERT INTO trabajos_fin_carrera (num_orden, tema, fecha_inicio, alumno_realiza) VALUES (?, ?, ?, ?)";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, tfc.getNumOrden());
-            stmt.setString(2, tfc.getTema());
-            stmt.setDate(3, java.sql.Date.valueOf(tfc.getFechaInicio()));
-            stmt.setString(4, tfc.getAlumnoRealiza());
 
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error al guardar el T.F.C.: " + e.getMessage());
-        }
-    }
-
-
-    @Override
-    public void actualizar(TrabajosFinCarrera tfc) {
-        try (Connection conn = ConexionDB.conectar()) {
-            String sql = "UPDATE trabajos_fin_carrera SET tema = ?, fecha_inicio = ?, alumno_realiza = ? WHERE num_orden = ?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, tfc.getTema());
-            stmt.setDate(2, java.sql.Date.valueOf(tfc.getFechaInicio()));
-            stmt.setString(3, tfc.getAlumnoRealiza());
-            stmt.setInt(4, tfc.getNumOrden());
-
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error al actualizar el T.F.C.: " + e.getMessage());
-        }
-    }
-
-
-    @Override
-    public void eliminar(int numOrden) {
-        try (Connection conn = ConexionDB.conectar()) {
-            String sql = "DELETE FROM trabajos_fin_carrera WHERE num_orden = ?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, numOrden);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error al eliminar el T.F.C.: " + e.getMessage());
-        }
+    private TrabajosFinCarrera mapear(ResultSet rs) throws SQLException {
+        return new TrabajosFinCarrera(
+                rs.getInt("num_orden"),
+                rs.getString("tema"),
+                rs.getDate("fecha_inicio").toLocalDate(),
+                rs.getInt("alumno_realiza"),
+                rs.getInt("profesor_dirige")
+        );
     }
 
 
@@ -79,7 +42,7 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
     public List<TrabajosFinCarrera> listarTodos() {
         List<TrabajosFinCarrera> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT * FROM tfc";
+            String sql = "SELECT * FROM trabajo_fin_carrera";
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
@@ -95,11 +58,21 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
     public List<TrabajosFinCarrera> listarEnCurso() {
         List<TrabajosFinCarrera> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT * FROM tfc WHERE defendido = FALSE OR defendido IS NULL";
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+            String sql = "SELECT * FROM trabajo_fin_carrera " +
+                    "WHERE num_orden NOT IN (" +
+                    "  SELECT tfc_defendido FROM tribunales " +
+                    "  WHERE tfc_defendido IS NOT NULL AND tfc_defendido <> ''" +
+                    ")";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                lista.add(mapear(rs));
+                lista.add(new TrabajosFinCarrera(
+                        rs.getInt("num_orden"),
+                        rs.getString("tema"),
+                        rs.getDate("fecha_inicio").toLocalDate(),
+                        rs.getInt("alumno_realiza"),
+                        rs.getInt("profesor_dirige")
+                ));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -107,12 +80,14 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
         return lista;
     }
 
+
+
     @Override
     public TrabajosFinCarrera obtenerPorAlumno(String dniAlumno) {
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT * FROM tfc WHERE dni_alumno = ?";
+            String sql = "SELECT * FROM trabajo_fin_carrera WHERE alumno_realiza = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, dniAlumno);
+            stmt.setInt(1, Integer.parseInt(dniAlumno));
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) return mapear(rs);
         } catch (SQLException e) {
@@ -125,7 +100,9 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
     public List<TrabajosFinCarrera> defendidosUltimos6Meses() {
         List<TrabajosFinCarrera> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT * FROM tfc WHERE defendido = TRUE AND fecha_defensa >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)";
+            String sql = "SELECT t.* FROM trabajo_fin_carrera t " +
+                    "JOIN tribunales tr ON t.num_orden = tr.tfc_defendido " +
+                    "WHERE tr.fecha_defensa >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)";
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
@@ -141,7 +118,8 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
     public List<String> temasConColaboracion() {
         List<String> temas = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT DISTINCT t.tema FROM tfc t JOIN colaboraciones c ON t.num_orden = c.num_tfc";
+            String sql = "SELECT DISTINCT t.tema FROM trabajo_fin_carrera t " +
+                    "JOIN colaboraciones c ON t.num_orden = c.id_tfc";
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
@@ -157,7 +135,7 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
     public List<TrabajosFinCarrera> listarPorAnio(int anio) {
         List<TrabajosFinCarrera> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT * FROM tfc WHERE YEAR(fecha_inicio) = ?";
+            String sql = "SELECT * FROM trabajo_fin_carrera WHERE YEAR(fecha_inicio) = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, anio);
             ResultSet rs = stmt.executeQuery();
@@ -172,29 +150,30 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
 
     @Override
     public List<String[]> cantidadPorProfesor() {
-        List<String[]> lista = new ArrayList<>();
+        List<String[]> datos = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT p.nombre, COUNT(t.num_orden) AS cantidad FROM tfc t " +
-                    "JOIN profesores p ON t.dni_profesor = p.dni GROUP BY p.nombre";
+            String sql = "SELECT p.nombre_completo, COUNT(t.num_orden) AS cantidad " +
+                    "FROM profesores p JOIN trabajo_fin_carrera t ON p.dni = t.profesor_dirige " +
+                    "GROUP BY p.dni";
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
-                lista.add(new String[]{rs.getString("nombre"), String.valueOf(rs.getInt("cantidad"))});
+                datos.add(new String[]{rs.getString("nombre_completo"), rs.getString("cantidad")});
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return lista;
+        return datos;
     }
 
     @Override
     public int cantidadPorTribunal(String idTribunal) {
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT COUNT(*) FROM tfc WHERE id_tribunal = ?";
+            String sql = "SELECT COUNT(*) AS total FROM tribunales WHERE num_tribunal = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, idTribunal);
+            stmt.setInt(1, Integer.parseInt(idTribunal));
             ResultSet rs = stmt.executeQuery();
-            if (rs.next()) return rs.getInt(1);
+            if (rs.next()) return rs.getInt("total");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -204,7 +183,9 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
     @Override
     public TrabajosFinCarrera defensaMasReciente() {
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT * FROM tfc WHERE defendido = TRUE ORDER BY fecha_defensa DESC LIMIT 1";
+            String sql = "SELECT t.* FROM trabajo_fin_carrera t " +
+                    "JOIN tribunales tr ON t.num_orden = tr.tfc_defendido " +
+                    "ORDER BY tr.fecha_defensa DESC LIMIT 1";
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             if (rs.next()) return mapear(rs);
@@ -218,10 +199,12 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
     public List<TrabajosFinCarrera> defendidosPorTribunalYFecha(String idTribunal, String fecha) {
         List<TrabajosFinCarrera> lista = new ArrayList<>();
         try (Connection conn = ConexionDB.conectar()) {
-            String sql = "SELECT * FROM tfc WHERE id_tribunal = ? AND fecha_defensa = ?";
+            String sql = "SELECT t.* FROM trabajo_fin_carrera t " +
+                    "JOIN tribunales tr ON t.num_orden = tr.tfc_defendido " +
+                    "WHERE tr.num_tribunal = ? AND tr.fecha_defensa = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, idTribunal);
-            stmt.setString(2, fecha);
+            stmt.setInt(1, Integer.parseInt(idTribunal));
+            stmt.setDate(2, Date.valueOf(fecha));
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 lista.add(mapear(rs));
@@ -232,13 +215,36 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
         return lista;
     }
 
-    // Método privado para mapear el resultSet
-    private TrabajosFinCarrera mapear(ResultSet rs) throws SQLException {
-        return new TrabajosFinCarrera(
-                rs.getInt("num_orden"),
-                rs.getString("tema"),
-                rs.getDate("fecha_inicio").toLocalDate(),
-                rs.getString("dni_alumno")
-        );
+    // CRUD básico (opcional si aún no los tienes)
+
+
+
+    @Override
+    public void actualizar(TrabajosFinCarrera tfc) {
+        try (Connection conn = ConexionDB.conectar()) {
+            String sql = "UPDATE trabajo_fin_carrera SET tema = ?, fecha_inicio = ?, alumno_realiza = ?, profesor_dirige = ? WHERE num_orden = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, tfc.getTema());
+            stmt.setDate(2, Date.valueOf(tfc.getFechaInicio()));
+            stmt.setInt(3, tfc.getAlumnoRealiza());
+            stmt.setInt(4, tfc.getProfesorDirige());
+            stmt.setInt(5, tfc.getNumOrden());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Override
+    public void eliminar(int numOrden) {
+        try (Connection conn = ConexionDB.conectar()) {
+            String sql = "DELETE FROM trabajo_fin_carrera WHERE num_orden = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, numOrden);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

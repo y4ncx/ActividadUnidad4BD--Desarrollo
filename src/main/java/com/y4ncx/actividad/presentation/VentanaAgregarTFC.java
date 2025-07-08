@@ -6,62 +6,58 @@ import com.y4ncx.actividad.infrastructure.TrabajosFinCarreraRepositoryImpl;
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
-import java.util.function.Consumer;
 
-public class VentanaAgregarTFC extends JDialog {
+public class VentanaAgregarTFC extends JFrame {
 
-    private final TrabajosFinCarreraRepositoryImpl repo = new TrabajosFinCarreraRepositoryImpl();
-
-    public VentanaAgregarTFC(Consumer<Void> callbackActualizar) {
+    public VentanaAgregarTFC(Runnable callbackActualizarTabla) {
         setTitle("➕ Agregar T.F.C.");
-        setModal(true);
-        setSize(400, 350);
+        setSize(400, 300);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new GridLayout(6, 2, 10, 10));
 
-        JPanel panelCampos = new JPanel(new GridLayout(6, 2, 10, 10));
-        JTextField campoOrden = new JTextField();
-        JTextField campoTema = new JTextField();
-        JTextField campoFecha = new JTextField(); // formato YYYY-MM-DD
-        JTextField campoAlumno = new JTextField(); // DNI del alumno
-        JTextField campoTribunal = new JTextField(); // Número del tribunal (defendió)
+        TrabajosFinCarreraRepositoryImpl repo = new TrabajosFinCarreraRepositoryImpl();
 
-        panelCampos.add(new JLabel("Número de Orden:"));
-        panelCampos.add(campoOrden);
-        panelCampos.add(new JLabel("Tema:"));
-        panelCampos.add(campoTema);
-        panelCampos.add(new JLabel("Fecha de Inicio (YYYY-MM-DD):"));
-        panelCampos.add(campoFecha);
-        panelCampos.add(new JLabel("DNI del Alumno:"));
-        panelCampos.add(campoAlumno);
-        panelCampos.add(new JLabel("N° Tribunal (defendió):"));
-        panelCampos.add(campoTribunal);
+        JTextField txtOrden = new JTextField();
+        JTextField txtTema = new JTextField();
+        JTextField txtFecha = new JTextField();
+        JTextField txtAlumno = new JTextField();
+        JTextField txtProfesor = new JTextField();
 
-        add(panelCampos, BorderLayout.CENTER);
+        add(new JLabel("N° de orden:"));     add(txtOrden);
+        add(new JLabel("Tema:"));            add(txtTema);
+        add(new JLabel("Fecha inicio (YYYY-MM-DD):")); add(txtFecha);
+        add(new JLabel("DNI del alumno:"));  add(txtAlumno);
+        add(new JLabel("DNI del profesor:"));add(txtProfesor);
 
-        JButton btnGuardar = new JButton("Guardar");
+        JButton btnGuardar = new JButton("💾 Guardar");
+        JButton btnCancelar = new JButton("Cancelar");
+
+        btnGuardar.setBackground(new Color(76, 175, 80));
+        btnGuardar.setForeground(Color.WHITE);
+        btnGuardar.setFont(new Font("Segoe UI", Font.BOLD, 14));
+
         btnGuardar.addActionListener(e -> {
             try {
-                int orden = Integer.parseInt(campoOrden.getText().trim());
-                String tema = campoTema.getText().trim();
-                LocalDate fechaInicio = LocalDate.parse(campoFecha.getText().trim());
-                String alumnoDni = campoAlumno.getText().trim();
-                String tribunalNum = campoTribunal.getText().trim(); // puedes almacenarlo si lo usas luego
+                int orden = Integer.parseInt(txtOrden.getText().trim());
+                String tema = txtTema.getText().trim();
+                LocalDate fecha = LocalDate.parse(txtFecha.getText().trim());
+                int alumno = Integer.parseInt(txtAlumno.getText().trim());
+                int profesor = Integer.parseInt(txtProfesor.getText().trim());
 
-                TrabajosFinCarrera nuevo = new TrabajosFinCarrera(orden, tema, fechaInicio, alumnoDni);
-                repo.agregar(nuevo);
+                TrabajosFinCarrera tfc = new TrabajosFinCarrera(orden, tema, fecha, alumno, profesor);
+                repo.agregar(tfc);
 
-                callbackActualizar.accept(null);
+                JOptionPane.showMessageDialog(this, "✅ T.F.C. guardado correctamente");
+                callbackActualizarTabla.run();
                 dispose();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error al guardar T.F.C.: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "❌ Error: " + ex.getMessage());
             }
         });
 
-        JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panelInferior.add(btnGuardar);
-        add(panelInferior, BorderLayout.SOUTH);
+        btnCancelar.addActionListener(e -> dispose());
 
+        add(btnGuardar); add(btnCancelar);
         setVisible(true);
     }
 }

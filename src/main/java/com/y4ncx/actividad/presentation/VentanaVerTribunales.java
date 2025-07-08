@@ -2,6 +2,7 @@ package com.y4ncx.actividad.presentation;
 
 import com.y4ncx.actividad.domain.Tribunal;
 import com.y4ncx.actividad.infrastructure.TribunalRepositoryImpl;
+import com.y4ncx.actividad.repository.TribunalRepository;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -30,10 +31,12 @@ public class VentanaVerTribunales extends JFrame {
 
         JPanel panelBotones = new JPanel(new FlowLayout());
 
-        JButton btnAgregar = new JButton("➕ Agregar");
-        JButton btnEditar = new JButton("✏️ Editar");
-        JButton btnEliminar = new JButton("🗑️ Eliminar");
-        JButton btnConsultas = new JButton("🔍 Consultas");
+        JButton btnAgregar = crearBoton(" Agregar");
+        JButton btnEditar = crearBoton(" Editar");
+        JButton btnEliminar = crearBoton("️ Eliminar");
+        JButton btnConsultas = crearBoton(" Consultas");
+        btnConsultas.setBackground(new Color(100, 100, 255));
+
 
         panelBotones.add(btnAgregar);
         panelBotones.add(btnEditar);
@@ -48,24 +51,47 @@ public class VentanaVerTribunales extends JFrame {
             JTextField num = new JTextField();
             JTextField lugar = new JTextField();
             JTextField profs = new JTextField();
-            JTextField campoPresente = new JTextField();  // CAMBIO
-            JTextField campoDefendido = new JTextField(); // CAMBIO
+            JTextField campoPresente = new JTextField();
+            JTextField campoDefendido = new JTextField();
             JTextField fecha = new JTextField();
+
             Object[] inputs = {
                     "N° Tribunal:", num,
                     "Lugar de examen:", lugar,
                     "Cantidad de profesores:", profs,
-                    "Alumno presente:", campoPresente,
-                    "TFC defendido:", campoDefendido,
+                    "Alumno presente (DNI):", campoPresente,
+                    "TFC defendido (N° orden):", campoDefendido,
                     "Fecha defensa (YYYY-MM-DD):", fecha
             };
-            int res = JOptionPane.showConfirmDialog(this, inputs, "Agregar Tribunal", JOptionPane.OK_CANCEL_OPTION);
+
+            int res = JOptionPane.showConfirmDialog(
+                    null, inputs, "➕ Agregar Tribunal", JOptionPane.OK_CANCEL_OPTION
+            );
+
             if (res == JOptionPane.OK_OPTION) {
-                // Aquí deberías guardar en la base de datos si lo deseas
-                JOptionPane.showMessageDialog(this, "✅ Tribunal agregado (simulado)");
-                mostrarDatos();
+                try {
+                    int numero = Integer.parseInt(num.getText().trim());
+                    String lugarExamen = lugar.getText().trim();
+                    int cantidad = Integer.parseInt(profs.getText().trim());
+                    String alumnoPresente = campoPresente.getText().trim();
+                    String tfcDefendido = campoDefendido.getText().trim();
+                    String fechaDefensa = fecha.getText().trim();
+
+                    // Aquí iría el guardado en BD si ya lo tienes
+                    Tribunal nuevo = new Tribunal(numero, lugarExamen, cantidad, alumnoPresente, tfcDefendido, fechaDefensa);
+                    TribunalRepository repo = new TribunalRepositoryImpl();
+                    repo.agregar(nuevo);
+
+                    JOptionPane.showMessageDialog(this, "✅ Tribunal agregado exitosamente");
+                    mostrarDatos();
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "⚠️ Verifica que los campos numéricos estén bien escritos.");
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "❌ Error al guardar: " + ex.getMessage());
+                }
             }
         });
+
 
         btnEditar.addActionListener(e -> {
             int fila = tabla.getSelectedRow();
@@ -74,25 +100,43 @@ public class VentanaVerTribunales extends JFrame {
                 return;
             }
 
-            JTextField lugar = new JTextField((String) modelo.getValueAt(fila, 1));
-            JTextField cantidad = new JTextField(modelo.getValueAt(fila, 2).toString());
-            JCheckBox alumnoPresente = new JCheckBox("Alumno presente", (boolean) modelo.getValueAt(fila, 3));
-            JCheckBox tfcDefendido = new JCheckBox("TFC defendido", (boolean) modelo.getValueAt(fila, 4));
-            JTextField fecha = new JTextField((String) modelo.getValueAt(fila, 5));
+            // Obtener valores actuales de la fila
+            int numTribunal = (int) modelo.getValueAt(fila, 0);
+            JTextField txtLugar = new JTextField(modelo.getValueAt(fila, 1).toString());
+            JTextField txtCantidad = new JTextField(modelo.getValueAt(fila, 2).toString());
+            JTextField txtAlumnoPresente = new JTextField(modelo.getValueAt(fila, 3).toString());
+            JTextField txtTfcDefendido = new JTextField(modelo.getValueAt(fila, 4).toString());
+            JTextField txtFecha = new JTextField(modelo.getValueAt(fila, 5).toString());
 
             Object[] inputs = {
-                    "Lugar de examen:", lugar,
-                    "Cantidad de profesores:", cantidad,
-                    alumnoPresente,
-                    tfcDefendido,
-                    "Fecha defensa:", fecha
+                    "Lugar de examen:", txtLugar,
+                    "Cantidad de profesores:", txtCantidad,
+                    "Alumno presente (DNI):", txtAlumnoPresente,
+                    "TFC defendido (N° orden):", txtTfcDefendido,
+                    "Fecha defensa (YYYY-MM-DD):", txtFecha
             };
-            int res = JOptionPane.showConfirmDialog(this, inputs, "Editar Tribunal", JOptionPane.OK_CANCEL_OPTION);
+
+            int res = JOptionPane.showConfirmDialog(this, inputs, "✏️ Editar Tribunal", JOptionPane.OK_CANCEL_OPTION);
             if (res == JOptionPane.OK_OPTION) {
-                JOptionPane.showMessageDialog(this, "✅ Tribunal editado (simulado)");
-                mostrarDatos();
+                try {
+                    String lugar = txtLugar.getText().trim();
+                    int cantidad = Integer.parseInt(txtCantidad.getText().trim());
+                    String alumnoPresente = txtAlumnoPresente.getText().trim();
+                    String tfcDefendido = txtTfcDefendido.getText().trim();
+                    String fecha = txtFecha.getText().trim();
+
+                    Tribunal actualizado = new Tribunal(numTribunal, lugar, cantidad, alumnoPresente, tfcDefendido, fecha);
+                    TribunalRepository repo = new TribunalRepositoryImpl();
+                    repo.actualizar(actualizado);
+
+                    JOptionPane.showMessageDialog(this, "✅ Tribunal actualizado correctamente");
+                    mostrarDatos();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "❌ Error al actualizar tribunal: " + ex.getMessage());
+                }
             }
         });
+
 
 
         btnEliminar.addActionListener(e -> {
@@ -105,14 +149,21 @@ public class VentanaVerTribunales extends JFrame {
             int id = (int) modelo.getValueAt(fila, 0);
             int confirm = JOptionPane.showConfirmDialog(this, "¿Eliminar tribunal #" + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                JOptionPane.showMessageDialog(this, "✅ Tribunal eliminado (simulado)");
-                mostrarDatos();
+                try {
+                    TribunalRepository repo = new TribunalRepositoryImpl();
+                    repo.eliminar(id);
+                    JOptionPane.showMessageDialog(this, "✅ Tribunal eliminado correctamente");
+                    mostrarDatos();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "❌ Error al eliminar tribunal: " + ex.getMessage());
+                }
             }
         });
 
 
+
         btnConsultas.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "🔍 Consultas de tribunales próximamente");
+            new com.y4ncx.actividad.presentation.consultas.ConsultaTribunalesFrame();
         });
 
         setVisible(true);
@@ -124,8 +175,18 @@ public class VentanaVerTribunales extends JFrame {
         for (Tribunal t : repo.listarTodos()) {
             modelo.addRow(new Object[]{
                     t.getNumTribunal(), t.getLugarExamen(), t.getCantidadProfesores(),
-                    t.isAlumnoPresente(), t.isTfcDefendido(), t.getFechaDefensa()
+                    t.getAlumnoPresente(), t.getTfcDefendido(), t.getFechaDefensa()
             });
         }
     }
+
+    private JButton crearBoton(String texto) {
+        JButton btn = new JButton(texto);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(new Color(0, 120, 255));
+        btn.setFocusPainted(false);
+        return btn;
+    }
+
 }
