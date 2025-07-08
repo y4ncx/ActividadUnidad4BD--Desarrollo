@@ -33,7 +33,7 @@ public class VentanaVerAlumnos extends JFrame {
 
 
 
-        // Botones estilizados
+
         JButton btnAgregar = crearBoton(" Agregar");
         JButton btnEditar = crearBoton("️ Editar");
         JButton btnEliminar = crearBoton("️ Eliminar");
@@ -55,7 +55,7 @@ public class VentanaVerAlumnos extends JFrame {
             int matricula = Integer.parseInt(modelo.getValueAt(fila, 2).toString());
 
             JTextField campoDni = new JTextField(dni);
-            campoDni.setEditable(false); // No editable para evitar errores con la clave primaria
+            campoDni.setEditable(false);
             JTextField campoNombre = new JTextField(nombre);
             JTextField campoMatricula = new JTextField(String.valueOf(matricula));
 

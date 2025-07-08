@@ -6,14 +6,14 @@ import java.util.List;
 
 public interface TribunalRepository {
 
-    // Operaciones CRUD básicas (si las necesitas implementar en el futuro)
+
     List<Tribunal> listarTodos();
 
     void actualizar(Tribunal tribunal);
 
     void agregar(Tribunal tribunal);
 
-    // Consultas específicas disponibles actualmente
+
     List<Tribunal> masDeTresProfesores();
     List<Tribunal> tribunalesConAlumnoPresente();
     List<Tribunal> tribunalesConAlumnoAusente();

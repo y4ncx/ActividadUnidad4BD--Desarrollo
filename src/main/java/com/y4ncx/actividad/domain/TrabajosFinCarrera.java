@@ -6,8 +6,8 @@ public class TrabajosFinCarrera {
     private int numOrden;
     private String tema;
     private LocalDate fechaInicio;
-    private int alumnoRealiza;     // 👈 int, no String
-    private int profesorDirige;    // 👈 int, no String
+    private int alumnoRealiza;
+    private int profesorDirige;
 
     public TrabajosFinCarrera(int numOrden, String tema, LocalDate fechaInicio, int alumnoRealiza, int profesorDirige) {
         this.numOrden = numOrden;

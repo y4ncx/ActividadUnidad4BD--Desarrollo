@@ -6,14 +6,14 @@ public class Alumno {
     private String nombreCompleto;
     private int numMatricula;
 
-    // Constructor
+
     public Alumno(String dni, String nombreCompleto, int numMatricula) {
         this.dni = dni;
         this.nombreCompleto = nombreCompleto;
         this.numMatricula = numMatricula;
     }
 
-    // Getters
+
     public String getDni() {
         return dni;
     }
@@ -26,7 +26,7 @@ public class Alumno {
         return numMatricula;
     }
 
-    // Setters
+
     public void setDni(String dni) {
         this.dni = dni;
     }
@@ -39,7 +39,7 @@ public class Alumno {
         this.numMatricula = numMatricula;
     }
 
-    // toString (opcional)
+
     @Override
     public String toString() {
         return "Alumno{" +

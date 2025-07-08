@@ -215,8 +215,6 @@ public class TrabajosFinCarreraRepositoryImpl implements TrabajosFinCarreraRepos
         return lista;
     }
 
-    // CRUD básico (opcional si aún no los tienes)
-
 
 
     @Override

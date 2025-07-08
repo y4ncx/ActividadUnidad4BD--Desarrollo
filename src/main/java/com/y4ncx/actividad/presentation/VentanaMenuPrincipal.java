@@ -13,7 +13,7 @@ public class VentanaMenuPrincipal extends JFrame {
         setLayout(new BorderLayout());
         getContentPane().setBackground(Color.BLACK);
 
-        // 🔝 Panel superior con título e imagen
+
         JPanel panelSuperior = new JPanel();
         panelSuperior.setLayout(new BoxLayout(panelSuperior, BoxLayout.Y_AXIS));
         panelSuperior.setBackground(Color.BLACK);
@@ -41,12 +41,12 @@ public class VentanaMenuPrincipal extends JFrame {
 
         add(panelSuperior, BorderLayout.NORTH);
 
-        // 📦 Panel central con botones
+
         JPanel panelBotones = new JPanel(new GridLayout(6, 1, 15, 15));
         panelBotones.setBackground(Color.BLACK);
         panelBotones.setBorder(BorderFactory.createEmptyBorder(10, 40, 20, 40));
 
-        // Botones
+
         JButton btnAlumnos = new JButton(" Alumnos");
         JButton btnTFC = new JButton(" Trabajos de Fin de Carrera");
         JButton btnProfesores = new JButton(" Profesores");
@@ -61,7 +61,7 @@ public class VentanaMenuPrincipal extends JFrame {
         configurarBoton(btnGrupos, new Color(52, 58, 64));
         configurarBoton(btnSalir, new Color(33, 37, 41));
 
-        // Acciones
+
         btnAlumnos.addActionListener(e -> new VentanaVerAlumnos());
         btnTFC.addActionListener(e -> new VentanaVerTFC());
         btnProfesores.addActionListener(e -> new VentanaVerProfesores());

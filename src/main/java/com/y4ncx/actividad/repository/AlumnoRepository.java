@@ -9,7 +9,7 @@ public interface AlumnoRepository {
     void eliminar(String dni);
     void actualizar(Alumno alumno);
 
-    // Métodos personalizados agregados:
+
     Alumno buscarPorMatricula(int matricula);
     List<Alumno> alumnosSinTFC();
     List<Alumno> alumnosConGrupoInvestigacion();

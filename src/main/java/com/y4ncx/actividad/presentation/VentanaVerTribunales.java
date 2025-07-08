@@ -100,7 +100,7 @@ public class VentanaVerTribunales extends JFrame {
                 return;
             }
 
-            // Obtener valores actuales de la fila
+
             int numTribunal = (int) modelo.getValueAt(fila, 0);
             JTextField txtLugar = new JTextField(modelo.getValueAt(fila, 1).toString());
             JTextField txtCantidad = new JTextField(modelo.getValueAt(fila, 2).toString());

@@ -8,8 +8,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             FlatIntelliJLaf.setup();
-
-            // Estilos redondeados y modernos
+            
             UIManager.put("Button.arc", 20);
             UIManager.put("Component.arc", 15);
             UIManager.put("TextComponent.arc", 10);

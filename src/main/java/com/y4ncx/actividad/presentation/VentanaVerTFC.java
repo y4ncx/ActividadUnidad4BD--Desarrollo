@@ -31,7 +31,7 @@ public class VentanaVerTFC extends JFrame {
         JScrollPane scrollPane = new JScrollPane(tabla);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Botones
+
         JButton btnAgregar = new JButton(" Agregar");
         JButton btnEditar = new JButton("️ Editar");
         JButton btnEliminar = new JButton("️ Eliminar");
@@ -59,13 +59,13 @@ public class VentanaVerTFC extends JFrame {
         panelBotones.add(btnConsultas);
         add(panelBotones, BorderLayout.SOUTH);
 
-        // Acción para botón Agregar
+
         btnAgregar.addActionListener(e -> new VentanaAgregarTFC(this::cargarTFC));
 
-        // Acción Consultas (debes tener ConsultaTFCFrame)
+
         btnConsultas.addActionListener(e -> new com.y4ncx.actividad.presentation.consultas.ConsultaTFCFrame());
 
-        // Acciones editar y eliminar (opcional)
+
         btnEditar.addActionListener(e -> {
             int fila = tabla.getSelectedRow();
             if (fila == -1) {
