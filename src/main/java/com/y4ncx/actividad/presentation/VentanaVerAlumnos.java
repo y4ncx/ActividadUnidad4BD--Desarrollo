@@ -42,14 +42,45 @@ public class VentanaVerAlumnos extends JFrame {
         btnConsultas.setBackground(new Color(100, 100, 255));
 
         btnAgregar.addActionListener(e -> new VentanaAgregarAlumno(this::cargarAlumnos));
+
         btnEditar.addActionListener(e -> {
             int fila = tabla.getSelectedRow();
             if (fila == -1) {
-                JOptionPane.showMessageDialog(this, "Selecciona un alumno para editar.");
+                JOptionPane.showMessageDialog(this, "⚠️ Selecciona un alumno de la tabla", "Aviso", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            new VentanaEditarAlumno(tabla);
+
+            String dni = (String) modelo.getValueAt(fila, 0);
+            String nombre = (String) modelo.getValueAt(fila, 1);
+            int matricula = Integer.parseInt(modelo.getValueAt(fila, 2).toString());
+
+            JTextField campoDni = new JTextField(dni);
+            campoDni.setEditable(false); // No editable para evitar errores con la clave primaria
+            JTextField campoNombre = new JTextField(nombre);
+            JTextField campoMatricula = new JTextField(String.valueOf(matricula));
+
+            Object[] inputs = {
+                    "DNI:", campoDni,
+                    "Nombre completo:", campoNombre,
+                    "Matrícula:", campoMatricula
+            };
+
+            int opcion = JOptionPane.showConfirmDialog(this, inputs, "Editar Alumno", JOptionPane.OK_CANCEL_OPTION);
+            if (opcion == JOptionPane.OK_OPTION) {
+                try {
+                    String nuevoNombre = campoNombre.getText();
+                    int nuevaMatricula = Integer.parseInt(campoMatricula.getText());
+
+                    AlumnoRepository repo = new AlumnoRepositoryImpl();
+                    repo.actualizar(new Alumno(dni, nuevoNombre, nuevaMatricula));
+                    JOptionPane.showMessageDialog(this, "✅ Alumno actualizado correctamente.");
+                    cargarAlumnos(); // refresca la tabla
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "⚠️ Matrícula inválida.");
+                }
+            }
         });
+
         btnEliminar.addActionListener(e -> eliminarAlumno());
         btnConsultas.addActionListener(e -> new ConsultaAlumnosFrame());
 
